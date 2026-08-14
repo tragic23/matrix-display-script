@@ -1,9 +1,9 @@
 import javax.swing.*;
 import java.awt.*;
-import java.util.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.AffineTransform;
+import java.util.*;
 
 // 1. Create a custom panel class
 class Panel extends JPanel {
@@ -12,7 +12,6 @@ class Panel extends JPanel {
     private int xCoordinate = 0;
     private int yCoordinate = 0;
     private javax.swing.Timer timer;
-    
     private int PanelWidth = 0;
     private int PanelHeight = 0;
     private int yMovement = 0;

@@ -2,15 +2,13 @@ import javax.swing.JFrame;
 import java.awt.event.*;
 
 public class Frame extends JFrame {
-   public Panel panel;
    int width = 800;
    int height = 400;
 
    public Frame() {
-      panel = new Panel(width, height);
-      
+      Panel panel = new Panel(width, height);
+      add(panel);
       setSize(width, height);
-        
       addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
@@ -22,7 +20,6 @@ public class Frame extends JFrame {
                 panel.revalidate();
             }
       });
-      add(panel);
       setTitle("Matrix Display");
       setDefaultCloseOperation(EXIT_ON_CLOSE);
       setLocationRelativeTo(null);

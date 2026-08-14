@@ -29,8 +29,7 @@ public class MatrixObject{
     } // end restartString()
 
     private String genRandString(int size){
-        Random rand = new Random();
-        String generateJapanesString = "";
+        String generateJapaneseString = "";
         
         // Katakana Unicode range: 0x30A1 to 0x30F6
         int MIN = 0x30A1;
@@ -38,8 +37,8 @@ public class MatrixObject{
         
         for(int i = 0; i < size; i++){
             char randomKatakana = (char) (rand.nextInt((MAX - MIN) + 1) + MIN);
-            generateJapanesString =  "" + randomKatakana + generateJapanesString;
+            generateJapaneseString =  "" + randomKatakana + generateJapaneseString;
         }
-        return generateJapanesString;
+        return generateJapaneseString;
     } // end genRandString()
 } // end class
