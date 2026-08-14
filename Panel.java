@@ -1,143 +1,108 @@
-
 import javax.swing.*;
 import java.awt.*;
 import java.util.*;
-
-import java.util.Random;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
-
+import java.awt.geom.AffineTransform;
 
 // 1. Create a custom panel class
 class Panel extends JPanel {
+    Random rand = new Random();
     
     private int xCoordinate = 0;
     private int yCoordinate = 0;
     private javax.swing.Timer timer;
-    String randomEmoticon = new String(Character.toChars(0x1F63B));
-    Random rand = new Random();
-    String matrixString = "";
-    int max = 15;
-    int min = 8;
     
-   
-    int PanelWidth = 1800;
-    int PanelHeight = 800;
-    int[] randomYStart = new int[PanelWidth / 22];
-
-
+    private int PanelWidth = 0;
+    private int PanelHeight = 0;
+    private int yMovement = 0;
+    private int fontSize = 0;
+    private java.util.List<MatrixObject> matrixArr = new ArrayList<>();
     
-
-    
-    java.util.List<MatrixObject> matrixArr = new ArrayList<>();
-    
-    public Panel( int w, int h) {
-        
-        PanelWidth = w;
-        PanelHeight = h;
-        
-
-
-
-
-        for(int i = 0; i < randomYStart.length; i++ ){
-            randomYStart[i] = rand.nextInt((max - min) + 1) + min;
-        }
-        
+    public Panel(int w, int h) {
+        setPanelSize(w,h);
         createList();
-        
+        setDoubleBuffered(true);
         setBackground(Color.BLACK);    // Timer fires an event every 10 milliseconds (approx. 100 FPS)
         
         ActionListener taskPerformer = new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-
-                
-                int i = 0;
+            public void actionPerformed(ActionEvent e) {       
+               // moves string down 3 px, and when off screen resets string and postion back at top
                 for(MatrixObject tempO: matrixArr ){
-                    
-                    tempO.yCoordinate += 10;
-                        if (tempO.yCoordinate > PanelHeight + (tempO.japaneseString.length() * 24) )  
-                            tempO.yCoordinate = 0-  2*(randomYStart[i] *24); 
-                        
-                    i++;
-                
-                     
+                    //System.out.println(yMovement);
+                    tempO.yCoordinate += yMovement;
+                        if (tempO.yCoordinate > PanelHeight + (tempO.japaneseString.length() * fontSize) ) {
+                            tempO.restartString();
+                        } 
                 }
-                
-                
                 repaint(); // Redraw the panel with the new position
             }
-        };
-        timer = new javax.swing.Timer(100, taskPerformer);
+        }; 
+        timer = new javax.swing.Timer(16, taskPerformer);
         timer.start();
-    }
+    } // end Panel constructor 
 
-
-    private void createList() {
-        String tempS = "";
-        
-        for(int i = 0; i < PanelWidth / 22; i++){
-            int randomNum = rand.nextInt((max - min) + 1) + min;
-            tempS = genRandString(randomNum);
-            MatrixObject matrixS =  new MatrixObject(tempS, xCoordinate + (i * 22),  yCoordinate -  2*(randomYStart[i] *24));
+    private void createList() { // create the init columns of strings   
+        for(int i = 0; i < this.PanelWidth / fontSize; i++){
+            MatrixObject matrixS =  new MatrixObject( xCoordinate + (i * fontSize),  yCoordinate );
             matrixArr.add(matrixS);
-
         }
-     
-    }
+    } // end createList()
+    
+    public void setPanelSize(int w, int h){
+        if(w != PanelWidth || h != PanelHeight){
+            PanelWidth = w; 
+            PanelHeight = h;
+            yMovement = PanelHeight / 150;
+            fontSize = 24;
+            matrixArr.removeAll(matrixArr);
+            createList();
+        }
+    } // end setPanelSize()
+    
     @Override
     protected void paintComponent(Graphics g) {
-        // Always call the superclass method first
         super.paintComponent(g); 
+        Graphics2D g2 = (Graphics2D) g.create();
+
+        // invert pannel on y axis to mirrir the glyphes
+        AffineTransform transform = AffineTransform.getScaleInstance(-1, 1);
+        transform.translate(-getWidth(), 0);
+        g2.transform(transform);
         
         for(MatrixObject tempO: matrixArr ){
            
-            drawMatrixString(g, tempO);
+            drawMatrixString(g2, tempO);
         }
-            
-        
-        
-       
-            
+        g2.dispose();
+    } // end paintComponent()
 
-    }
-
-    private void drawMatrixString(Graphics g, MatrixObject object){
-         
-        // Set the text color
-        g.setColor(Color.GREEN);
+    private void drawMatrixString(Graphics2D g, MatrixObject object){
         // Set the text font (Font Name, Style, Size)
-        g.setFont(new Font("Arial", Font.BOLD, 24));
-        
+        g.setFont(new Font(Font.MONOSPACED, Font.BOLD, fontSize));
+        g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
         int length = object.japaneseString.length();
-        
+
         for(int i = 0; i < length; i++){
-            System.out.println(object.xCoordinate);
-            g.drawString( object.japaneseString.substring(i , i +1 ), object.xCoordinate , object.yCoordinate + (i * 24));
-            if( i == length -2){
+            // set fade
+            float constant = 1f/ length;
+            float opacity =  (i * constant);
+            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
+
+            // Set the text color
+            if( i == length-1)
                 g.setColor(Color.WHITE);
-            }
+            else 
+                g.setColor(Color.GREEN);
+            // .5% of changing white char
+            if (rand.nextDouble() < 0.005 && i == length -1)
+                object.changeLastChar();
+            // draw char
+            g.drawString( object.japaneseString.substring(i , i +1 ), object.xCoordinate , object.yCoordinate + (i * fontSize));
         }      
-    }
-
-    private String genRandString(int size){
-        Random rand = new Random();
-        String generateJapanesString = "";
-        
-        // Hiragana Unicode range: 0x3041 to 0x3093
-        int min = 0x3041;
-        int max = 0x3093;
-        
-        for(int i = 0; i < size; i++){
-            char randomHiragana = (char) (rand.nextInt((max - min) + 1) + min);
-
-
-            generateJapanesString =  "" + randomHiragana + generateJapanesString;
-        }
-        return generateJapanesString;
-    }
-}
+    } // end drawStringMethod
+} // end class
 
 
